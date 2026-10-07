@@ -63,6 +63,15 @@ Shop groups used below:
 | B16b | *(alt.)* 12 V power bank / 3S Li-ion pack with DC out | cordless use | 1 | `12V lithium battery pack`, `12V power bank DC` | ELEC | | |
 | B17 | Heat-shrink tube | assorted | 1 | `heat shrink` | ELEC | | |
 
+### B-soldering (needed to build the perfboard)
+
+| # | Item | Spec | Qty | Search keywords | Try first | Price | Link |
+|---|------|------|-----|-----------------|-----------|-------|------|
+| B18 | **Soldering flux** | no-clean **paste** (e.g. RMA-223 / AMTECH style) or a **flux pen**. Avoid acid flux (plumbing type) because it corrodes electronics | 1 | `soldering flux`, `flux paste`, `RMA-223`, `flux pen`, `no clean flux` | ELEC | | |
+| B19 | Solder wire | 0.6–0.8 mm, 63/37 or 60/40 with a rosin core | 1 roll | `solder wire 0.8mm`, `tin solder 63/37` | ELEC | | |
+| B20 | Desoldering wick | 2–2.5 mm | 1 | `desoldering wick`, `solder wick` | ELEC | | |
+| B21 | Isopropyl alcohol (IPA) 99 % | cleans flux off the board | 1 | `isopropyl alcohol 99`, `IPA` | ELEC | | |
+
 ## C. Screws, nuts, small parts
 
 | # | Item | Qty | Used for | Search keywords | Try first | Price | Link |
@@ -119,6 +128,8 @@ Shop groups used below:
 | power adapter | محول باور 12 فولت |
 | screw / nut | مسمار / صامولة |
 | filament | خيط طباعة ثلاثية الأبعاد |
+| soldering flux | فلكس لحام / معجون لحام |
+| solder wire | سلك قصدير لحام |
 
 ### Rough budget
 
