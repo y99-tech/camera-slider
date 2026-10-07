@@ -20,16 +20,23 @@ module end_rod_section() {
                     rotate([-90, 0, 0]) cylinder(r = 8, h = end_d);
         }
 
-        for (sx = [-1, 1]) {
-            x = sx * rod_sp/2;
+        for (x = rod_xs) {
             // rod socket (blind, rod stops at y = end_d - rod_insert)
             translate([x, end_d - rod_insert, rod_z]) teardrop_y(rod_hole, rod_insert + eps);
-            // M4 set-screw from the top + captive nut slot from the outer side
+            // M4 set-screw from the top + captive nut slot from the inner face
             translate([x, end_d - rod_insert/2, rod_z]) cylinder(d = m4_hole, h = 50);
-            translate([x - m4_nut/2 + (sx > 0 ? 0 : -40), end_d - rod_insert/2 - m4_nut/2, rod_z + rod_d/2 + 3])
-                cube([m4_nut + 40, m4_nut, m4_nut_t]);
-            // weight-saving pocket between rod and edge
+            translate([x - m4_nut/2, end_d - rod_insert/2 - m4_nut/2, rod_z + rod_d/2 + 2.5])
+                cube([m4_nut, rod_insert, m4_nut_t]);
         }
+
+        // KW11 micro-switch pocket (+X side, below the rods): the carriage's outer
+        // cheek presses the lever. Switch body 20 x 10 x 6.4, M2 screws from the side.
+        translate([cheek_out + cheek_t/2 - 3.3, end_d - 10.4, floor_t + 6]) {
+            cube([6.6, 10.4 + eps, 20.5]);
+            for (dz = [5.5, 15]) translate([-10, 3, dz]) rotate([0, 90, 0]) cylinder(d = 2.2, h = 30);
+        }
+        // switch wires up to the top channel
+        translate([cheek_out + cheek_t/2, end_d - 5, floor_t + 20]) cylinder(d = 4, h = end_h);
 
         // belt passage (both runs)
         translate([-6, -eps, pulley_z - 11]) cube([12, end_d + 2*eps, 22 + 2]);
@@ -136,10 +143,30 @@ module idler_end() {
 }
 
 // ------------------------------------------------------------
-//  CARRIAGE  (4x LM12UU, ball-head mount, two belt clamps)
+//  CARRIAGE  (6x 608ZZ rollers on two twin-rod tracks, ball-head mount,
+//  two belt clamps). Per track: 2 rollers on top, 1 preloaded underneath.
 // ------------------------------------------------------------
 belt_clamp_y = car_l/2 - 10;     // centre of each belt clamp block
 belt_block_bottom = belt_top_z + 0.9;   // belt (1.4 mm) lies just below this face
+top_axle_z = rod_z + roller_dz;
+bot_axle_z = rod_z - roller_dz;
+
+// one cheek plate, x0..x1, with a thicker boss around the bottom axle
+module cheek(x0, x1, boss_dx) {
+    difference() {
+        union() {
+            translate([x0, -car_l/2, top_axle_z - 9]) cube([x1 - x0, car_l, car_z0 - top_axle_z + 10]);
+            hull() {
+                translate([x0, -16, cheek_bot]) cube([x1 - x0, 32, 1]);
+                translate([x0, -40, top_axle_z - 9]) cube([x1 - x0, 80, 1]);
+            }
+            translate([min(x0, x0 + boss_dx), -12, cheek_bot]) cube([x1 - x0 + abs(boss_dx), 24, 12]);
+        }
+        // windows between the rollers
+        for (sy = [-1, 1])
+            translate([x0 - 1, sy * 24 - 6, top_axle_z - 3]) cube([x1 - x0 + 2, 12, car_z0 - top_axle_z]);
+    }
+}
 
 module carriage() {
     difference() {
@@ -150,14 +177,16 @@ module carriage() {
                     cube([car_w - 8, car_l - 8, car_t - 1]);
                     translate([4, 4, 0]) cylinder(r = 4, h = 1, $fn = 24);
                 }
-            // bearing housings
-            for (sx = [-1, 1])
-                translate([sx * rod_sp/2, -car_l/2, rod_z])
-                    rotate([-90, 0, 0]) cylinder(r = housing_r, h = car_l);
-            // web between housing and plate
-            for (sx = [-1, 1])
-                translate([sx * rod_sp/2 - housing_r, -car_l/2, rod_z])
-                    cube([2 * housing_r, car_l, car_z0 - rod_z + 1]);
+            // roller cheeks: one inside and one outside each rod pair
+            for (sx = [-1, 1]) {
+                if (sx > 0) {
+                    cheek(cheek_in - cheek_t, cheek_in, -4);
+                    cheek(cheek_out, cheek_out + cheek_t, 4);
+                } else {
+                    cheek(-cheek_in, -cheek_in + cheek_t, 4);
+                    cheek(-cheek_out - cheek_t, -cheek_out, -4);
+                }
+            }
             // belt clamp blocks
             for (sy = [-1, 1])
                 translate([-11, sy * belt_clamp_y - 10, belt_block_bottom])
@@ -166,21 +195,25 @@ module carriage() {
             translate([-4, -belt_clamp_y, belt_block_bottom + 6])
                 cube([8, 2 * belt_clamp_y, car_z0 - belt_block_bottom - 5]);
         }
-        // bearing seats - 2 bearings per side, one at each end
-        for (sx = [-1, 1], sy = [-1, 1])
-            translate([sx * rod_sp/2, sy * (car_l/2 - lm_len/2), rod_z])
-                teardrop_y(lm_bore, lm_len + 2*eps, center = true, down = true, clip = 1.5);
-        // middle of each housing is relieved; bearings press in from each end
-        // and stop against the 0.8 mm shoulder this leaves
-        for (sx = [-1, 1])
-            translate([sx * rod_sp/2, -car_l/2 + lm_len - eps, rod_z])
-                teardrop_y(lm_od - 1.6, car_l - 2 * lm_len + 2*eps, down = true, clip = 1.5);
+        for (sx = [-1, 1]) {
+            // top roller axles (M8)
+            for (sy = [-1, 1])
+                translate([sx * track_sp/2, sy * roller_y, top_axle_z])
+                    rotate([0, 90, 0]) cylinder(d = axle_d + 0.4, h = 60, center = true);
+            // bottom roller axle: vertical slot so it can be pushed up (preload)
+            translate([sx * track_sp/2, 0, 0]) rotate([0, 90, 0])
+                hull() for (dz = [-2.5, 1]) translate([-(bot_axle_z + dz), 0, 0])
+                    cylinder(d = axle_d + 0.4, h = 60, center = true);
+            // M4 push screws (from below) under the bottom axle, one per cheek
+            for (cx = [cheek_in - cheek_t/2, cheek_out + cheek_t/2])
+                translate([sx * cx, 0, cheek_bot - eps]) cylinder(d = 3.5, h = bot_axle_z - cheek_bot);
+        }
         // belt clamp screws: M3 from below, nut dropped in from the top
         for (sy = [-1, 1], sx = [-1, 1]) {
             translate([sx * 7, sy * belt_clamp_y, belt_block_bottom - eps])
-                cylinder(d = m3_hole, h = 40);
+                cylinder(d = m3_hole, h = 60);
             translate([sx * 7, sy * belt_clamp_y, belt_block_bottom + 6])
-                rotate(30) hex(m3_nut, 40);
+                rotate(30) hex(m3_nut, 60);
         }
         // belt guide groove in the clamp block underside
         for (sy = [-1, 1])
@@ -189,16 +222,31 @@ module carriage() {
         // ---- camera / head mounting ----
         // centre 3/8" hole, two 1/4" holes (use with a 3/8" or 1/4" screw from below)
         translate([0, 0, car_z0 - 20]) cylinder(d = 9.8, h = 40);
+        for (sx = [-1, 1]) translate([sx * 20, 0, car_z0 - 20]) cylinder(d = 6.6, h = 40);
         // room for the screw head + a big washer under each mounting hole
-        for (x = [-28, 0, 28]) translate([x, 0, car_z0 - 20]) cylinder(d = 24, h = 20);
-        for (sx = [-1, 1]) translate([sx * 28, 0, car_z0 - 20]) cylinder(d = 6.6, h = 40);
+        translate([0, 0, car_z0 - 20]) cylinder(d = 24, h = 20);
+        for (sx = [-1, 1]) translate([sx * 20, 0, car_z0 - 20]) cylinder(d = 15, h = 20);
         // anti-twist slots for heads with locating pins
         for (sy = [-1, 1]) hull()
             for (dy = [0, 8]) translate([0, sy * (16 + dy), car_z0 - 1]) cylinder(d = 5, h = 20);
         // light-weighting windows
         for (sx = [-1, 1], sy = [-1, 1])
-            translate([sx * 25, sy * 32, car_z0 - eps])
-                cylinder(d = 18, h = car_t + 1);
+            translate([sx * 18, sy * 30, car_z0 - eps])
+                cylinder(d = 15, h = car_t + 1);
+    }
+}
+
+// spacer tube between a roller and a cheek (12 needed)
+module roller_spacer() {
+    l = (cheek_out - cheek_in - roller_w) / 2 - 0.3;
+    difference() {
+        cylinder(d = 13, h = l);
+        translate([0, 0, -eps]) cylinder(d = axle_d + 0.4, h = l + 1);
+    }
+    // small lip that touches only the bearing inner race
+    translate([0, 0, l]) difference() {
+        cylinder(d = 11, h = 0.3);
+        translate([0, 0, -eps]) cylinder(d = axle_d + 0.4, h = 1);
     }
 }
 
@@ -275,28 +323,6 @@ module crank_spinner() {
     difference() {
         cylinder(d = 12, h = 22);
         translate([0, 0, -eps]) cylinder(d = 5.8, h = 30);
-    }
-}
-
-// ------------------------------------------------------------
-//  ENDSTOP CLIP - clamps on a 12 mm rod, holds a KW11 micro switch
-// ------------------------------------------------------------
-module endstop_clip() {
-    w = 10;
-    difference() {
-        union() {
-            cylinder(d = rod_d + 8, h = w);
-            // arm that carries the switch
-            translate([0, -3, 0]) cube([rod_d/2 + 18, 6, w]);
-            // clamp ears
-            translate([-rod_d/2 - 10, -5, 0]) cube([10, 10, w]);
-        }
-        translate([0, 0, -eps]) cylinder(d = rod_hole, h = w + 1);
-        translate([-rod_d/2 - 11, -0.75, -eps]) cube([12, 1.5, w + 1]);  // split
-        translate([-rod_d/2 - 5, 10, w/2]) rotate([90, 0, 0]) cylinder(d = m3_hole, h = 20);
-        // KW11 switch holes (M2, 9.5 mm apart)
-        for (dx = [0, 9.5])
-            translate([rod_d/2 + 6 + dx, 10, w/2]) rotate([90, 0, 0]) cylinder(d = 2.2, h = 20);
     }
 }
 

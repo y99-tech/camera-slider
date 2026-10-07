@@ -27,7 +27,7 @@ PLA+ is OK for indoor use.
 | `thumb_knob.stl`       | 1 | 30 % | quick-release for hand mode |
 | `hand_wheel.stl`       | 1 | 30 % | crank on the idler shaft |
 | `crank_spinner.stl`    | 1 | 30 % | spins on an M5×30 bolt |
-| `endstop_clip.stl`     | 2 | 50 % | |
+| `roller_spacer.stl`    | **12** | 100 % | 2 per roller, lip toward the bearing |
 | `table_foot.stl`       | 2 | 30 % | optional – wider stance on a table |
 | `elec_box.stl`         | 1 | 20 % | |
 | `elec_lid.stl`         | 1 | 20 % | outside face on the bed |
@@ -37,10 +37,13 @@ Total ≈ 550–650 g of filament.
 
 ## Fit tuning
 
-Print one `endstop_clip.stl` first and test it on your rod – it uses the same 12.25 mm hole as the end blocks.
+Before the big parts, print a small test: a 15 mm cube with a 10.25 mm hole (or just print one end block
+first) and check your rods fit.
 
 * Rod too loose/tight → change `rod_hole` in `cad/config.scad`.
-* LM12UU too tight in the carriage → change `lm_bore` (21.3 → 21.4). Too loose → 21.2, or a drop of CA glue.
+* M8 bolts tight in the cheeks → drill the holes with an 8.5 mm drill (don't widen them in CAD, they should be snug).
+* Your rods aren't 10 mm, or you want a different gap between the 2 rods of a track → change `rod_d` and `pair_sp`.
+  Roller height (`roller_dz`) and the carriage height follow automatically.
 * Nuts don't fit → adjust `m3_nut`, `m4_nut`, `q14_nut`, `q38_nut`.
 
 Then run `./cad/export_stl.sh` (needs [OpenSCAD](https://openscad.org)) to regenerate all STLs.
@@ -48,9 +51,8 @@ Then run `./cad/export_stl.sh` (needs [OpenSCAD](https://openscad.org)) to regen
 ## Different rail length / rods
 
 * Rail length: just cut the rods. Set the firmware travel to match: `SET travel <mm>`, `SAVE`.
-  Usable travel ≈ rod length − 52 mm (inside the blocks) − 120 mm (carriage) − ~25 mm (endstops).
+  Usable travel ≈ rod length − 52 mm (inside the blocks) − 120 mm (carriage) − ~20 mm (endstop levers).
   800 mm rods → ~600 mm travel. 1000 mm rods → ~800 mm.
-* Keep 12 mm rods up to **1000 mm**. With the A7 IV + 24-70 GM II in the middle and a tripod at
-  each end, 12 mm rods bend about 0.5 mm at 800 mm and about 1 mm at 1000 mm. That's fine for video.
-  Longer rails need 16 mm rods (LM16UU), and that needs a redesign of the carriage and the end
-  blocks (`rod_z`, `car_z0`, `housing_r`). It is not just one value to change.
+* With 4 × 10 mm rods the load is shared by all four. With the A7 IV + 24-70 GM II in the middle and a
+  tripod at each end, they bend about **0.5 mm at 800 mm** and about **1 mm at 1000 mm**. That's fine for video.
+  For longer rails, add a third tripod/light stand in the middle under a rod clamp, or use thicker rods.

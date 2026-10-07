@@ -6,18 +6,28 @@
 
 $fn = 64;
 
-// ---------- Rails ----------
-rod_d        = 12;      // smooth rod diameter (12 mm chrome rod, matches LM12UU)
-rod_hole     = 12.25;   // printed hole for the rod (tune to your printer)
-rod_sp       = 100;     // rod centre-to-centre distance
+// ---------- Rails: 4 rods = 2 "twin-rod" tracks ----------
+// Each track is two parallel rods; 608ZZ rollers ride in the groove
+// between them (2 on top + 1 preloaded underneath per track).
+rod_d        = 10;      // smooth rod diameter (4 rods)
+rod_hole     = 10.25;   // printed hole for the rod (tune to your printer)
+track_sp     = 100;     // centre-to-centre distance of the two tracks
+pair_sp      = 16;      // centre-to-centre distance of the 2 rods in one track
 rod_z        = 45;      // rod centre height above the ground plane
 rail_len     = 800;     // rod length (only used for the assembly preview)
-rod_insert   = 26;      // how deep the rod goes into each end block
+rod_insert   = 26;      // how deep the rods go into each end block
 
-// ---------- Linear bearings (LM12UU) ----------
-lm_od        = 21;
-lm_len       = 30;
-lm_bore      = 21.3;    // press fit; increase to 21.4 if too tight
+// rod X positions (all four)
+rod_xs = [-track_sp/2 - pair_sp/2, -track_sp/2 + pair_sp/2,
+           track_sp/2 - pair_sp/2,  track_sp/2 + pair_sp/2];
+
+// ---------- Rollers (608ZZ skate bearings) ----------
+roller_od    = 22;
+roller_w     = 7;
+axle_d       = 8;       // M8 bolt
+// height of a roller centre above (top) / below (bottom) the rod centres
+roller_dz    = sqrt(pow(roller_od/2 + rod_d/2, 2) - pow(pair_sp/2, 2));
+roller_y     = 42;      // top rollers at +-roller_y from carriage centre
 
 // ---------- Motor / belt ----------
 nema_w       = 42.3;    // NEMA17 body
@@ -29,7 +39,7 @@ belt_w       = 6;
 belt_top_z   = pulley_z + pulley_pd/2;   // centre of the upper belt run
 
 // ---------- End blocks ----------
-end_w        = 140;     // width across X
+end_w        = 150;     // width across X
 end_d        = 30;      // depth of the rod-clamp section (Y)
 end_h        = rod_z + 20;
 floor_t      = 6;
@@ -42,8 +52,11 @@ pulley_y_idler = -20;
 car_w        = 144;
 car_l        = 120;
 car_t        = 8;
-car_z0       = rod_z + 8;        // bottom of carriage top plate
-housing_r    = lm_od/2 + 4;      // outer radius of the bearing housings
+car_z0       = rod_z + roller_dz + roller_od/2 + 2.5;   // bottom of the top plate
+cheek_t      = 6;
+cheek_in     = track_sp/2 - pair_sp/2 - rod_d/2 - 1;    // inner cheek outer face (|x|)
+cheek_out    = track_sp/2 + pair_sp/2 + rod_d/2 + 1;    // outer cheek inner face (|x|)
+cheek_bot    = rod_z - roller_dz - 9;                   // bottom of the cheeks
 
 // ---------- Hardware ----------
 m3_hole  = 3.3;   m3_nut  = 6.4;  m3_nut_t = 2.6;

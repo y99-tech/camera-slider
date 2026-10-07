@@ -1,5 +1,6 @@
 // Full assembly preview (not for printing)
 include <parts.scad>
+module roller() rotate([0, 90, 0]) difference() { cylinder(d = roller_od, h = roller_w, center = true); cylinder(d = 8, h = 8, center = true); }
 car_pos = 0;   // carriage position along the rail (mm, 0 = centre)
 
 ins = end_d - rod_insert;          // rod end inside the block
@@ -10,14 +11,18 @@ y_i =  span/2;                     // idler end origin (mirrored)
 color("SteelBlue") translate([0, y_m, 0]) motor_end();
 color("SteelBlue") translate([0, y_i, 0]) mirror([0, 1, 0]) idler_end();
 // rods
-color("Silver") for (sx = [-1, 1])
-    translate([sx * rod_sp/2, -rail_len/2, rod_z]) rotate([-90, 0, 0]) cylinder(d = rod_d, h = rail_len);
+color("Silver") for (x = rod_xs)
+    translate([x, -rail_len/2, rod_z]) rotate([-90, 0, 0]) cylinder(d = rod_d, h = rail_len);
 // carriage + bearings
 translate([0, car_pos, 0]) {
     color("Orange") carriage();
-    color("Silver") for (sx = [-1, 1], sy = [-1, 1])
-        translate([sx * rod_sp/2, sy * (car_l/2 - lm_len/2), rod_z]) rotate([-90, 0, 0])
-            difference() { cylinder(d = lm_od, h = lm_len, center = true); cylinder(d = rod_d, h = lm_len + 1, center = true); }
+    // 608ZZ rollers: 2 on top + 1 underneath per track, M8 axles
+    color("Silver") for (sx = [-1, 1]) {
+        for (sy = [-1, 1]) translate([sx * track_sp/2, sy * roller_y, top_axle_z]) roller();
+        translate([sx * track_sp/2, 0, bot_axle_z]) roller();
+    }
+    color("DimGray") for (sx = [-1, 1]) for (p = [[-roller_y, top_axle_z], [roller_y, top_axle_z], [0, bot_axle_z]])
+        translate([sx * track_sp/2, p[0], p[1]]) rotate([0, 90, 0]) cylinder(d = 8, h = 2 * (cheek_out + cheek_t - track_sp/2) + 6, center = true);
     color("DarkOrange") for (sy = [-1, 1]) translate([0, sy * belt_clamp_y, belt_block_bottom - 1.6 - 4]) belt_clamp_plate();
     // ball head + camera (A7 IV + 24-70 GM II, approximate)
     color("DimGray") translate([0, 0, car_z0 + car_t]) cylinder(d = 40, h = 70);

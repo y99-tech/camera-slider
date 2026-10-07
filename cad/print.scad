@@ -9,7 +9,7 @@ if (part == "belt_clamp_plate") belt_clamp_plate();
 if (part == "thumb_knob")       thumb_knob();
 if (part == "hand_wheel")       hand_wheel();
 if (part == "crank_spinner")    crank_spinner();
-if (part == "endstop_clip")     endstop_clip();
+if (part == "roller_spacer")    roller_spacer();
 if (part == "table_foot")       table_foot();
 if (part == "elec_box")         elec_box();
 if (part == "elec_lid_print")   elec_lid_print();

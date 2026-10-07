@@ -1,6 +1,6 @@
 # DIY Motorized Camera Slider (ESP32 · Wi-Fi + Bluetooth)
 
-A 3D-printed, belt-driven camera slider on two 12 mm steel rods, sized for a
+A 3D-printed, belt-driven camera slider on **four 10 mm steel rods with 608ZZ roller bearings**, sized for a
 **Sony A7 IV + FE 24-70 mm F2.8 GM II** (≈ 1.4 kg, ≈ 1.8 kg with a ball head).
 It's built from parts you can buy in Egyptian electronics/maker shops, and every printed part fits a
 **Creality Ender-3 V3**.
@@ -45,8 +45,8 @@ It's built from parts you can buy in Egyptian electronics/maker shops, and every
 
 | | |
 |---|---|
-| Rails | 2 × 12 mm chrome rod, 100 mm apart, 800 mm long (≈ 600 mm travel). 1000 mm works too |
-| Bearings | 4 × LM12UU |
+| Rails | 4 × 10 mm chrome rod, arranged as 2 twin-rod tracks 100 mm apart. 800 mm long (≈ 600 mm travel), up to 1000 mm |
+| Bearings | 6 × 608ZZ rollers on M8 axles: 2 on top + 1 preloaded underneath per track. They roll in the groove between the two rods, with zero play and no sliding parts |
 | Drive | NEMA17, GT2 6 mm belt, 20T pulleys → 80 steps/mm at 1/16 microstep |
 | Speed | up to 120 mm/s (configurable), down to < 0.01 mm/s for long time-lapses |
 | Controller | ESP32-WROOM-32 DevKit V1 + TMC2209 + LM2596 |

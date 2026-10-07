@@ -9,8 +9,8 @@ Tools: 2.5 / 3 mm Allen keys, small pliers, soldering iron, multimeter, hacksaw 
 1. **Tripod nuts.** Push the nuts into the slots on the **inner face** (the face where the rods go in):
    two **1/4"-20** nuts (outer) and one **3/8"-16** nut (centre) in each block. A drop of CA glue holds
    them. Screw a tripod screw in from below to pull each one fully into its hex pocket.
-2. **Rod set-screw nuts.** Slide an **M4 nut** into the slot on each outer side above the rod socket,
-   then start an **M4×16** screw from the top (don't tighten yet).
+2. **Rod set-screw nuts.** Slide an **M4 nut** into each of the 4 slots on the inner face, above each rod
+   socket, then start an **M4×16** screw from the top (don't tighten yet).
 
 ![motor end](img/motor_end.png)
 
@@ -38,15 +38,37 @@ nice for slow manual moves with the belt still attached.
 
 ![carriage underside](img/carriage_under.png)
 
-1. Press **2× LM12UU** into each bearing tube, one from each end, until they hit the shoulder in the middle.
-   Use a vise or clamp, not a hammer. If they're too tight, warm the plastic with a hair dryer.
-2. Drop **M3 nuts** into the 4 hex pockets on top of the belt-clamp blocks.
+![rollers](img/view_rollers.png)
+
+The carriage rides on **6 × 608ZZ** rollers. Each track (pair of rods) gets **2 rollers on top**, sitting in
+the groove between the two rods, and **1 roller underneath** pushing up into the same groove. The rollers
+touch each rod on a line at about 30°, so the carriage can't move sideways or lift. Every contact rolls;
+nothing slides.
+
+1. Drop **M3 nuts** into the 4 hex pockets on top of the belt-clamp blocks.
+2. Top rollers (×4): **M8×50** bolt → washer → cheek → **spacer** → 608ZZ → **spacer** → cheek → washer
+   → **nyloc**. Tighten until the bearing can't wobble but still spins freely. The spacer's small lip
+   must touch only the bearing's **inner** ring.
+3. Bottom rollers (×2) go in later (step 5) with **M8×60** bolts, the same way, through the slots.
+4. Screw an **M4×12** a few turns into each of the 4 holes under the bottom slots (they push the
+   bottom rollers up).
 
 ## 5. Rails
 
-1. Slide the carriage onto the two **12 mm rods**.
-2. Push the rods into the end blocks until they bottom out. Check the rods are parallel: the carriage
-   must glide end-to-end without tight spots. Tighten the **4× M4** set-screws.
+1. Push the **4 × 10 mm rods** into one end block until they bottom out, and tighten the 4 M4 set-screws
+   (roll each rod on a flat table first. A bent rod wobbles; don't use it).
+2. Set the carriage on the rods: the top rollers sit in the two grooves.
+3. Push the other end block onto the rods and tighten its set-screws.
+4. Fit the 2 **bottom rollers** (M8×60) from the sides, through the slots, under each rod pair.
+5. **Preload:** for each bottom roller, loosen its nut, turn the two M4 push screws until the roller just
+   touches both rods, then **¼ turn more**. Tighten the M8 nut. Do it with the camera on. Correct preload =
+   no play when you try to lift or twist the carriage, but it still glides with one finger and doesn't
+   "notch". Too tight shortens bearing life and makes it rough.
+6. Slide it end to end. If one spot is tight, a rod is bent or the rods aren't parallel. Loosen the
+   set-screws, let the carriage centre the rods, retighten.
+
+> Keep the rods clean and wipe them with a drop of light oil (sewing-machine oil) on a cloth. Dust on the
+> rods is the main cause of noise with rollers.
 
 ## 6. Belt
 
@@ -60,9 +82,11 @@ nice for slow manual moves with the belt still attached.
 
 ## 7. Endstops
 
-Clip an **endstop clip** on one rod near each end. Fix a **KW11** micro switch to it with 2× M2.
-Rotate/slide the clip so the carriage's bearing tube presses the lever ~2 mm before it would touch the
-end block. Tighten the M3 clamp screw. Run the wires along the channel on top of the end block.
+Each end block has a pocket on its inner face, on the **+X side below the rods**. Push a **KW11** switch in
+(lever facing the carriage) and fix it with **2× M2** screws from the outside of the block. The carriage's
+outer roller cheek presses the lever before it reaches the block. Bend the lever slightly if it doesn't
+click about 2 mm before the cheek touches the block. Wires go up through the small hole into the top
+channel.
 
 ## 8. Electronics
 
