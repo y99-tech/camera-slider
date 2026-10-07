@@ -90,8 +90,8 @@ module motor_end() {
             }
             // electronics box screws (M4, 80 mm apart) + cable hole
             for (sx = [-1, 1])
-                translate([sx * 40, -motor_bay_d - eps, 35]) rotate([-90, 0, 0]) cylinder(d = m4_hole, h = 10);
-            translate([0, -motor_bay_d - eps, 45]) rotate([-90, 0, 0]) cylinder(d = 12, h = 10);
+                translate([sx * 40, -motor_bay_d - eps, 40]) rotate([-90, 0, 0]) cylinder(d = m4_hole, h = 10);
+            translate([0, -motor_bay_d - eps, 50]) rotate([-90, 0, 0]) cylinder(d = 12, h = 10);
             // floor drain / weight holes
             for (sx = [-1, 1])
                 translate([sx * 45, -motor_bay_d/2, -eps]) cylinder(d = 16, h = floor_t + 2);
@@ -166,19 +166,15 @@ module carriage() {
             translate([-4, -belt_clamp_y, belt_block_bottom + 6])
                 cube([8, 2 * belt_clamp_y, car_z0 - belt_block_bottom - 5]);
         }
-        // bearing bores (through) - 2 bearings per side, one at each end
-        for (sx = [-1, 1])
-            translate([sx * rod_sp/2, -car_l/2 - eps, rod_z])
-                rotate([-90, 0, 0]) cylinder(d = lm_bore, h = car_l + 2*eps);
-        // centre relief so the rod never touches the plastic between bearings
-        // zip-tie grooves around each bearing
+        // bearing seats - 2 bearings per side, one at each end
         for (sx = [-1, 1], sy = [-1, 1])
             translate([sx * rod_sp/2, sy * (car_l/2 - lm_len/2), rod_z])
-                rotate([-90, 0, 0])
-                    difference() {
-                        cylinder(r = housing_r + 2, h = 4, center = true);
-                        cylinder(r = housing_r - 1.6, h = 5, center = true);
-                    }
+                teardrop_y(lm_bore, lm_len + 2*eps, center = true, down = true, clip = 1.5);
+        // middle of each housing is relieved; bearings press in from each end
+        // and stop against the 0.8 mm shoulder this leaves
+        for (sx = [-1, 1])
+            translate([sx * rod_sp/2, -car_l/2 + lm_len - eps, rod_z])
+                teardrop_y(lm_od - 1.6, car_l - 2 * lm_len + 2*eps, down = true, clip = 1.5);
         // belt clamp screws: M3 from below, nut dropped in from the top
         for (sy = [-1, 1], sx = [-1, 1]) {
             translate([sx * 7, sy * belt_clamp_y, belt_block_bottom - eps])
@@ -193,6 +189,8 @@ module carriage() {
         // ---- camera / head mounting ----
         // centre 3/8" hole, two 1/4" holes (use with a 3/8" or 1/4" screw from below)
         translate([0, 0, car_z0 - 20]) cylinder(d = 9.8, h = 40);
+        // room for the screw head + a big washer under each mounting hole
+        for (x = [-28, 0, 28]) translate([x, 0, car_z0 - 20]) cylinder(d = 24, h = 20);
         for (sx = [-1, 1]) translate([sx * 28, 0, car_z0 - 20]) cylinder(d = 6.6, h = 40);
         // anti-twist slots for heads with locating pins
         for (sy = [-1, 1]) hull()

@@ -43,7 +43,7 @@ car_w        = 144;
 car_l        = 120;
 car_t        = 8;
 car_z0       = rod_z + 8;        // bottom of carriage top plate
-housing_r    = 14.5;             // outer radius of the bearing housings
+housing_r    = lm_od/2 + 4;      // outer radius of the bearing housings
 
 // ---------- Hardware ----------
 m3_hole  = 3.3;   m3_nut  = 6.4;  m3_nut_t = 2.6;
@@ -61,13 +61,19 @@ eps = 0.01;
 module hex(af, h) { cylinder(d = af / cos(30), h = h, $fn = 6); }
 
 // horizontal hole along Y printable without supports (point at +Z)
-module teardrop_y(d, l, center = false) {
+// down = true puts the point at -Z (for parts printed upside down)
+// clip  = how far (mm) the point may stick out beyond the circle
+module teardrop_y(d, l, center = false, down = false, clip = 100) {
     translate([0, center ? l/2 : l, 0])
     rotate([90, 0, 0])
+    mirror([0, down ? 1 : 0])
     linear_extrude(l)
     union() {
         circle(d = d);
-        rotate(45) square(d/2);
+        intersection() {
+            rotate(45) square(d/2);
+            translate([-d, 0]) square([2*d, d/2 + clip]);
+        }
     }
 }
 

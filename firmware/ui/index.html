@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>Camera Slider</title>
+<style>
+:root{--bg:#121417;--card:#1d2126;--line:#2c323a;--fg:#e8eaed;--mut:#9aa3ad;--acc:#f5a524;--ok:#3ecf8e;--bad:#ef4444}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.4 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+header{display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--bg);z-index:2}
+header h1{font-size:17px;margin:0;flex:1}
+.pill{font-size:12px;padding:3px 8px;border-radius:99px;background:var(--line);color:var(--mut)}
+.pill.ok{background:#173d2c;color:var(--ok)}.pill.bad{background:#47191b;color:#fca5a5}
+main{max-width:640px;margin:0 auto;padding:12px 16px 80px}
+section{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px;margin:12px 0}
+h2{font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--mut);margin:0 0 10px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:6px 0}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+button{flex:1;min-width:64px;padding:12px 8px;border:1px solid var(--line);border-radius:10px;background:#262b31;color:var(--fg);font:inherit;font-weight:600;cursor:pointer}
+button:active{transform:scale(.97)}
+button.acc{background:var(--acc);color:#111;border-color:var(--acc)}
+button.stop{background:var(--bad);border-color:var(--bad);color:#fff;font-size:18px;padding:16px}
+button.on{outline:2px solid var(--ok)}
+label{font-size:13px;color:var(--mut);display:flex;flex-direction:column;gap:4px;flex:1;min-width:90px}
+input{width:100%;padding:10px;border-radius:8px;border:1px solid var(--line);background:#14171a;color:var(--fg);font:inherit}
+input[type=range]{padding:0;accent-color:var(--acc);height:36px}
+.pos{font-size:34px;font-weight:700;font-variant-numeric:tabular-nums}
+.mut{color:var(--mut);font-size:13px}
+.bar{position:relative;height:28px;background:#14171a;border-radius:8px;border:1px solid var(--line);margin:8px 0}
+.bar .c{position:absolute;top:2px;bottom:2px;width:14px;margin-left:-7px;background:var(--acc);border-radius:4px}
+.bar .m{position:absolute;top:-4px;bottom:-4px;width:2px;background:var(--ok)}
+.bar .m span{position:absolute;top:-16px;left:-4px;font-size:11px;color:var(--ok)}
+#log{font:12px ui-monospace,monospace;color:var(--mut);white-space:pre-wrap;max-height:120px;overflow:auto}
+.stopbar{position:fixed;left:0;right:0;bottom:0;padding:10px 16px;background:linear-gradient(transparent,var(--bg) 30%)}
+.stopbar div{max-width:640px;margin:0 auto;display:flex;gap:8px}
+a{color:var(--acc)}
+details summary{cursor:pointer;color:var(--mut)}
+</style>
+</head>
+<body>
+<header>
+  <h1>Camera Slider</h1>
+  <span id="link" class="pill">offline</span>
+  <button id="bleBtn" style="flex:0;min-width:auto;padding:6px 10px;display:none">Bluetooth</button>
+</header>
+<main>
+  <section>
+    <div class="row"><div class="pos"><span id="pos">--</span> <small class="mut">mm</small></div>
+      <div style="flex:1;text-align:right" class="mut"><div id="mode">-</div><div id="homed">-</div></div></div>
+    <div class="bar" id="bar"><div class="m" id="mA"><span>A</span></div><div class="m" id="mB"><span>B</span></div><div class="c" id="car"></div></div>
+    <input type="range" id="goto" min="0" max="600" step="1" value="0">
+    <div class="row">
+      <button onclick="cmd('HOME')">Home</button>
+      <button id="motorBtn" onclick="toggleMotor()">Motor ON</button>
+    </div>
+  </section>
+
+  <section>
+    <h2>Jog</h2>
+    <div class="grid">
+      <button onclick="cmd('JOG -50')">-50</button><button onclick="cmd('JOG -10')">-10</button><button onclick="cmd('JOG -1')">-1</button>
+      <button onclick="cmd('JOG 1')">+1</button><button onclick="cmd('JOG 10')">+10</button><button onclick="cmd('JOG 50')">+50</button>
+    </div>
+  </section>
+
+  <section>
+    <h2>A → B move</h2>
+    <div class="row">
+      <button onclick="cmd('SETA')">Set A here</button><button onclick="cmd('GOA')">Go A</button>
+      <button onclick="cmd('SETB')">Set B here</button><button onclick="cmd('GOB')">Go B</button>
+    </div>
+    <div class="row">
+      <label>Duration (s)<input id="secs" type="number" value="20" min="0.5" step="0.5"></label>
+      <label>Ease (%)<input id="ease" type="number" value="30" min="0" max="100"></label>
+      <label>Legs (0 = bounce)<input id="legs" type="number" value="1" min="0"></label>
+    </div>
+    <div class="row"><button class="acc" onclick="runAB()">▶ Run</button></div>
+    <div class="mut">Duration presets:
+      <a href="#" onclick="return ps(5)">5 s</a> · <a href="#" onclick="return ps(15)">15 s</a> ·
+      <a href="#" onclick="return ps(30)">30 s</a> · <a href="#" onclick="return ps(60)">1 min</a> ·
+      <a href="#" onclick="return ps(600)">10 min</a> · <a href="#" onclick="return ps(3600)">1 h</a></div>
+  </section>
+
+  <section>
+    <h2>Keyframes (up to 6)</h2>
+    <div class="row">
+      <label>Time to reach (s)<input id="ksecs" type="number" value="10" min="0.5"></label>
+      <button onclick="cmd('KEY ADD '+pos.toFixed(1)+' '+v('ksecs'))">+ Add key here</button>
+    </div>
+    <div class="row"><button onclick="cmd('KEY LIST')">List</button><button onclick="cmd('KEY CLR')">Clear</button>
+      <button class="acc" onclick="cmd('SEQ 1')">▶ Play</button><button onclick="cmd('SEQ 0')">Loop</button></div>
+  </section>
+
+  <section>
+    <h2>Time-lapse (shoot-move-shoot)</h2>
+    <div class="row">
+      <label>Shots<input id="shots" type="number" value="240"></label>
+      <label>Interval (s)<input id="intv" type="number" value="5" step="0.5"></label>
+      <label>Settle (ms)<input id="settle" type="number" value="500"></label>
+      <label>Shutter (ms)<input id="shut" type="number" value="200"></label>
+    </div>
+    <div class="row"><button class="acc" onclick="cmd(['TL',v('shots'),v('intv'),v('settle'),v('shut')].join(' '))">▶ Start A → B</button>
+      <button onclick="cmd('SHUTTER')">Test shutter</button></div>
+    <div class="mut" id="tlinfo">Moves from A to B between shots. Uses the ease % above.</div>
+  </section>
+
+  <section>
+    <h2>Stop motion</h2>
+    <div class="row">
+      <label>Step (mm)<input id="smstep" type="number" value="2" step="0.1"></label>
+      <button onclick="cmd('SET smstep '+v('smstep'))">Set</button>
+      <button onclick="cmd('SNAP -')">◀ Snap</button><button class="acc" onclick="cmd('SNAP')">Snap ▶</button>
+    </div>
+  </section>
+
+  <section>
+    <details><summary>Settings</summary>
+      <div class="row">
+        <label>Steps/mm<input id="s_spm" type="number" step="0.01"></label>
+        <label>Max speed mm/s<input id="s_vmax" type="number"></label>
+        <label>Accel mm/s²<input id="s_accel" type="number"></label>
+        <label>Travel mm<input id="s_travel" type="number"></label>
+      </div>
+      <div class="row">
+        <label>Invert dir (0/1)<input id="s_invert" type="number" min="0" max="1"></label>
+        <label>Endstops (0/1)<input id="s_endstops" type="number" min="0" max="1"></label>
+        <label>Home on boot (0/1)<input id="s_homeboot" type="number" min="0" max="1"></label>
+      </div>
+      <div class="row">
+        <label>Home Wi-Fi name (blank = own hotspot)<input id="s_ssid"></label>
+        <label>Home Wi-Fi password<input id="s_pass" type="password"></label>
+      </div>
+      <div class="row"><button onclick="loadCfg()">Reload</button><button class="acc" onclick="saveCfg()">Save settings</button>
+        <button onclick="cmd('ZERO')">Set 0 here</button><button onclick="cmd('REBOOT')">Reboot</button></div>
+      <div class="row"><input id="raw" placeholder="raw command, e.g. HELP"><button style="flex:0" onclick="cmd(v('raw'))">Send</button></div>
+    </details>
+    <div id="log"></div>
+  </section>
+</main>
+<div class="stopbar"><div><button class="stop" onclick="cmd('STOP')">■ STOP</button></div></div>
+
+<script>
+const $=id=>document.getElementById(id), v=id=>$(id).value.trim();
+let pos=0, st={}, ble=null, bleTx=null, bleBuf='', waiters=[];
+// served by the slider itself -> use HTTP; opened as a file / https -> Bluetooth
+const httpMode = location.protocol==='http:' && location.host!=='';
+const NUS='6e400001-b5a3-f393-e0a9-e50e24dcca9e', RX='6e400002-b5a3-f393-e0a9-e50e24dcca9e', TX='6e400003-b5a3-f393-e0a9-e50e24dcca9e';
+
+function log(t){const l=$('log');l.textContent=(t+'\n'+l.textContent).slice(0,3000);}
+function link(t,c){const e=$('link');e.textContent=t;e.className='pill '+(c||'');}
+
+async function send(c){
+  if(ble&&bleTx){
+    const p=new Promise(r=>waiters.push(r));
+    await bleTx.writeValue(new TextEncoder().encode(c+'\n'));
+    return Promise.race([p,new Promise(r=>setTimeout(()=>r(''),1500))]);
+  }
+  if(httpMode){const r=await fetch('/cmd?c='+encodeURIComponent(c));return r.text();}
+  throw new Error('not connected');
+}
+async function cmd(c){
+  if(!c)return;
+  try{const r=await send(c);if(r&&!r.startsWith('{'))log('> '+c+'\n'+r);poll();return r;}
+  catch(e){log('! '+e.message);}
+}
+function ps(s){$('secs').value=s;return false;}
+function runAB(){cmd(['RUN',v('secs'),v('ease'),v('legs')].join(' '));}
+function toggleMotor(){cmd(st.motor?'MOTOR OFF':'MOTOR ON');}
+
+function show(s){
+  st=s;pos=s.pos;
+  $('pos').textContent=s.pos.toFixed(1);
+  $('mode').textContent=s.mode+(s.shots?` ${s.shot}/${s.shots}`:'')+(s.msg&&s.msg!=='homed'&&s.msg!=='idle'?' · '+s.msg:'');
+  $('homed').textContent=s.homed?'homed':'NOT homed';
+  const T=s.travel||1, pc=x=>Math.max(0,Math.min(100,x/T*100))+'%';
+  $('car').style.left=pc(s.pos);$('mA').style.left=pc(s.a);$('mB').style.left=pc(s.b);
+  const g=$('goto');g.max=T;if(document.activeElement!==g)g.value=s.pos;
+  const m=$('motorBtn');m.textContent=s.motor?'Motor ON (tap for hand mode)':'HAND MODE (tap for motor)';m.classList.toggle('on',s.motor);
+}
+async function poll(){
+  try{
+    const r=httpMode&&!ble?await (await fetch('/status')).text():await send('STATUS');
+    if(r&&r.startsWith('{')){show(JSON.parse(r));link(ble?'Bluetooth':'Wi-Fi','ok');}
+  }catch(e){link('offline','bad');}
+}
+$('goto').addEventListener('change',e=>cmd('GOTO '+e.target.value));
+
+async function loadCfg(){
+  const r=await send('CONFIG');if(!r||!r.startsWith('{'))return;const c=JSON.parse(r);
+  for(const k of ['spm','vmax','accel','travel','invert','endstops','homeboot','ssid'])$('s_'+k).value=c[k];
+  $('smstep').value=c.smstep;
+}
+async function saveCfg(){
+  for(const k of ['spm','vmax','accel','travel','invert','endstops','homeboot']){const x=v('s_'+k);if(x!=='')await send('SET '+k+' '+x);}
+  await send('SET ssid '+(v('s_ssid')||'-'));
+  if(v('s_pass'))await send('SET pass '+v('s_pass'));
+  log(await send('SAVE')+'\n(Wi-Fi changes apply after Reboot)');
+}
+
+// ---------------- Web Bluetooth ----------------
+if(navigator.bluetooth && !httpMode){$('bleBtn').style.display='';}
+$('bleBtn').onclick=async()=>{
+  try{
+    const dev=await navigator.bluetooth.requestDevice({filters:[{services:[NUS]}]});
+    dev.addEventListener('gattserverdisconnected',()=>{ble=null;bleTx=null;link('offline','bad');});
+    const srv=await dev.gatt.connect(), svc=await srv.getPrimaryService(NUS);
+    bleTx=await svc.getCharacteristic(RX);
+    const rx=await svc.getCharacteristic(TX);
+    await rx.startNotifications();
+    rx.addEventListener('characteristicvaluechanged',e=>{
+      bleBuf+=new TextDecoder().decode(e.target.value);
+      let i;while((i=bleBuf.indexOf('\n'))>=0){const line=bleBuf.slice(0,i);bleBuf=bleBuf.slice(i+1);const w=waiters.shift();if(w)w(line.replace(/\r/g,'\n'));}
+    });
+    ble=dev;link('Bluetooth','ok');loadCfg();
+  }catch(e){log('Bluetooth: '+e.message);}
+};
+
+setInterval(()=>{if(httpMode||ble)poll();},700);
+if(httpMode){poll();loadCfg();}else link(navigator.bluetooth?'tap Bluetooth':'no Bluetooth in this browser','bad');
+</script>
+</body>
+</html>
