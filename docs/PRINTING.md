@@ -1,58 +1,63 @@
 # Printing (Creality Ender-3 V3 / V3 SE / V3 KE)
 
-All parts fit the 220 × 220 mm bed. Print them in the orientation the STL is already in.
+Every part fits the 220 × 220 mm bed (`cad/check_fit.sh` checks it). Print each STL in the orientation
+it's already in. **No supports are needed.**
 
 ## Material
 
-**PETG** is recommended (stiffer, doesn't creep under the camera weight, survives a hot car).
-PLA+ is OK for indoor use.
+**PETG** (stiff, doesn't creep under the camera, OK in a hot car). PLA+ is fine for indoor use.
+Filament sources are in [SHOPPING_LIST.md](SHOPPING_LIST.md) (E1).
 
 | Setting | PETG | PLA+ |
 |---------|------|------|
 | Nozzle / bed | 235–245 °C / 70–80 °C | 210–220 °C / 60 °C |
 | Layer height | 0.2 mm | 0.2 mm |
-| Walls (perimeters) | **4** | 4 |
-| Top / bottom layers | 5 / 5 | 5 / 5 |
+| Walls | **4** | 4 |
+| Top / bottom | 5 / 5 | 5 / 5 |
 | Fan | 30–50 % | 100 % |
-| Supports | **none needed** | none |
+| Supports | none | none |
+| Brim | 5 mm on the big parts (PETG can lift at the corners) | – |
 
-## Parts
+## Parts and print order
 
-| STL | Qty | Infill | Notes |
-|-----|-----|--------|-------|
-| `motor_end.stl`        | 1 | 40 % gyroid | flat on bed. Longest print (~6–7 h) |
-| `idler_end.stl`        | 1 | 40 % gyroid | flat on bed |
-| `carriage.stl`         | 1 | 40 % gyroid | already upside down (top plate on bed) |
-| `belt_clamp_plate.stl` | 2 | 100 % | teeth up |
-| `thumb_knob.stl`       | 1 | 30 % | quick-release for hand mode |
-| `hand_wheel.stl`       | 1 | 30 % | crank on the idler shaft |
-| `crank_spinner.stl`    | 1 | 30 % | spins on an M5×30 bolt |
-| `roller_spacer.stl`    | **12** | 100 % | 2 per roller, lip toward the bearing |
-| `table_foot.stl`       | 2 | 30 % | optional – wider stance on a table |
-| `elec_box.stl`         | 1 | 20 % | |
-| `elec_lid.stl`         | 1 | 20 % | outside face on the bed |
-| `encoder_knob.stl`     | 1 | 30 % | optional |
+Print them in this order. The first two let you test the fit of your rods, nuts and bearings before
+the long prints.
 
-Total ≈ 550–650 g of filament.
+| # | STL | Qty | Infill | Orientation / notes | ≈ time |
+|---|-----|-----|--------|---------------------|--------|
+| 1 | `roller_spacer.stl` | **12** | 100 % | lip up. Test: must slide on an M8 bolt | 1 h all |
+| 2 | `end_block.stl` | **2** | 40 % gyroid | flat bottom on the bed. **Test rods + nuts in the first one** | 4 h each |
+| 3 | `carriage.stl` | 1 | 40 % gyroid | already upside down (top plate on the bed) | 6 h |
+| 4 | `motor_pod.stl` | 1 | 35 % | floor on the bed | 5 h |
+| 5 | `crank_pod.stl` | 1 | 35 % | floor on the bed | 2.5 h |
+| 6 | `spring_seat.stl` | 4 | 100 % | | 10 min |
+| 7 | `belt_clamp_plate.stl` | 2 | 100 % | teeth up | 20 min |
+| 8 | `hand_wheel.stl` + `crank_spinner.stl` | 1 + 1 | 30 % | | 1.5 h |
+| 9 | `thumb_knob.stl` | 1 | 30 % | | 15 min |
+| 10 | `elec_box.stl` | 1 | 20 % | | 4 h |
+| 11 | `elec_lid.stl` | 1 | 20 % | outside face on the bed | 1 h |
+| 12 | `encoder_knob.stl` | 1 | 30 % | optional | 15 min |
+| 13 | `table_foot.stl` | 2 | 30 % | optional | 1 h |
 
-## Fit tuning
+Total ≈ **700–800 g** PETG and ≈ 35 h of printing.
 
-Before the big parts, print a small test: a 15 mm cube with a 10.25 mm hole (or just print one end block
-first) and check your rods fit.
+## Fit tests (do them on the first end block)
 
-* Rod too loose/tight → change `rod_hole` in `cad/config.scad`.
-* M8 bolts tight in the cheeks → drill the holes with an 8.5 mm drill (don't widen them in CAD, they should be snug).
-* Your rods aren't 10 mm, or you want a different gap between the 2 rods of a track → change `rod_d` and `pair_sp`.
-  Roller height (`roller_dz`) and the carriage height follow automatically.
-* Nuts don't fit → adjust `m3_nut`, `m4_nut`, `q14_nut`, `q38_nut`.
+| Check | Good | Fix |
+|-------|------|-----|
+| 10 mm rod in its socket | slides in with a push, no wobble | `rod_hole` 10.25 → 10.35 (tight) or 10.15 (loose) |
+| M4 nut in the hex pockets | presses in | `m4_nut` 7.3 → 7.5 |
+| 1/4" & 3/8" nuts | slide in from the inner face | `q14_nut`, `q38_nut` |
+| M8 bolt through the carriage cheeks | snug | drill 8.5 mm by hand. Don't widen it in CAD |
+| bed spring in its pocket (Ø9) | drops in freely | `spring_d` |
+| micro switch in its pocket | push fit | sand the pocket |
 
-Then run `./cad/export_stl.sh` (needs [OpenSCAD](https://openscad.org)) to regenerate all STLs.
+After changing `cad/config.scad`, run `./cad/export_stl.sh` (needs [OpenSCAD](https://openscad.org)), then
+`./cad/check_fit.sh`.
 
-## Different rail length / rods
+## Other rod lengths / sizes
 
-* Rail length: just cut the rods. Set the firmware travel to match: `SET travel <mm>`, `SAVE`.
-  Usable travel ≈ rod length − 52 mm (inside the blocks) − 120 mm (carriage) − ~20 mm (endstop levers).
-  800 mm rods → ~600 mm travel. 1000 mm rods → ~800 mm.
-* With 4 × 10 mm rods the load is shared by all four. With the A7 IV + 24-70 GM II in the middle and a
-  tripod at each end, they bend about **0.5 mm at 800 mm** and about **1 mm at 1000 mm**. That's fine for video.
-  For longer rails, add a third tripod/light stand in the middle under a rod clamp, or use thicker rods.
+* **Length:** nothing to reprint. Set the travel in the app (*Settings → Travel*) or with `SET travel <mm>` + `SAVE`.
+  Formula and belt lengths are in [DIMENSIONS.md](DIMENSIONS.md).
+* **Different rod diameter or gap:** change `rod_d` / `rod_hole` / `pair_sp`. The roller height, carriage
+  height and cheek positions all follow automatically. Then re-export and run `check_fit.sh`.

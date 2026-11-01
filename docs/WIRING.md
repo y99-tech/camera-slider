@@ -1,5 +1,12 @@
 # Wiring
 
+![wiring diagram](img/wiring.svg)
+
+Everything except the motor and the switches lives in the **electronics box**. The motor, the endstops and
+the camera shutter cable plug into **3 GX12-4 sockets** on the top of the box, so the box comes off the
+slider without any soldering.
+
+
 ```
  12 V adapter / 3S battery
         │
@@ -9,6 +16,27 @@
                                    LM2596 OUT+ ─► ESP32 VIN (5V pin)
  all GND tied together ◄──────────── LM2596 GND, TMC2209 GND (both), ESP32 GND
 ```
+
+## GX12-4 sockets (box top, left to right seen from the front)
+
+| Socket | Pin 1 | Pin 2 | Pin 3 | Pin 4 | Cable |
+|--------|-------|-------|-------|-------|-------|
+| **MOTOR** (X = −30) | coil A+ (TMC 2B) | coil A− (TMC 2A) | coil B+ (TMC 1A) | coil B− (TMC 1B) | 4-core, ~0.5 m to the motor |
+| **ENDSTOPS** (X = 0) | GND (both switch COM) | MIN (GPIO 32) | MAX (GPIO 33) | spare | 4-core, ~1.2 m: splits to both end blocks |
+| **SHUTTER** (X = +30) | PC817 collector (pin 4) | PC817 emitter (pin 3) | – | – | to the camera remote cable |
+
+Solder the female (panel) half in the box and the male (plug) half on the cables. Put heat-shrink on
+every pin. The motor plug must never be pulled while the power is on.
+
+## Inside the box
+
+![perfboard](img/perfboard.svg)
+
+* **Perfboard 70 × 50 mm** on the 4 standoffs, on the +X side of the box: ESP32 on female headers (USB lines up
+  with the hole in the +X wall), TMC2209 on female headers with its heatsink toward the vent wall,
+  100 µF cap, JST-XH / screw terminals for the wires going to the GX12 sockets, the jack and the lid.
+* **LM2596** in the printed frame on the −X side (foam tape). Set it to **5.0 V before** wiring the ESP32.
+* **DC jack + KCD1 switch** in the −X wall, **KY-040 + 2 buttons + LED** in the lid.
 
 ## ESP32 DevKit V1 pin map
 
@@ -20,8 +48,8 @@
 | GPIO 25   | TMC2209 **STEP** | |
 | GPIO 26   | TMC2209 **DIR**  | wrong direction? send `SET invert 1` then `SAVE` |
 | GPIO 27   | TMC2209 **EN**   | low = motor on; high = hand mode |
-| GPIO 32   | MIN endstop (motor end) **NO** contact | switch **COM → GND** |
-| GPIO 33   | MAX endstop (idler end) **NO** contact | switch **COM → GND** |
+| GPIO 32   | MIN endstop **NO** contact (the end that should be position 0 – normally the motor end) | switch **COM → GND** |
+| GPIO 33   | MAX endstop **NO** contact (other end) | switch **COM → GND** |
 | GPIO 18   | KY-040 **CLK** *(optional)* | encoder **+ → 3V3**, **GND → GND** |
 | GPIO 19   | KY-040 **DT**  *(optional)* | |
 | GPIO 5    | KY-040 **SW**  *(optional)* | |
@@ -53,7 +81,7 @@ Check your module's page – the exact formula differs between BigTreeTech, FYSE
 
 ## Endstops
 
-Micro switch (KW11): **COM → GND**, **NO → GPIO 32 (motor end)** / **GPIO 33 (idler end)**. Leave NC empty.
+Micro switch (KW11): **COM → GND**, **NO → GPIO 32 (MIN, the 0 end – normally the motor end)** / **GPIO 33 (MAX, the other end)**. Leave NC empty.
 No switches? Send `SET endstops 0`, `SAVE` – then use **ZERO** to set 0 wherever the carriage is.
 
 ## Camera shutter (time-lapse, optional)
@@ -75,16 +103,3 @@ the slider with a long `RUN` (e.g. `RUN 1800` = 30 min continuous slide).
 * Battery: 3× 18650 in series with a **3S BMS** (≈ 11.1 V nominal, 12.6 V full). Runs for hours.
 * Don't power from USB and 12 V at the same time unless your ESP32 board has a diode on VIN
   (most DevKit V1 do – check for a small diode next to the USB connector). Switch 12 V off when flashing.
-
-## Perfboard layout suggestion (7 × 5 cm)
-
-```
- ┌───────────────────────────────────────────────┐
- │  [ ESP32 DevKit on female headers ]            │
- │                                                │
- │  [TMC2209 on headers]   (100µF)   [LM2596]     │
- │  motor 4-pin  endstop 2×2-pin  12V screw term. │
- └───────────────────────────────────────────────┘
-```
-Use female headers so the ESP32 and driver can be removed/replaced. The box (`elec_box.stl`) has
-standoffs for a 70 × 50 mm board (64 × 44 mm hole pattern, M2.5 screws / self-tapping M3).

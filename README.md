@@ -7,13 +7,22 @@ It's built from parts you can buy in Egyptian electronics/maker shops, and every
 
 ![assembly](docs/img/assembly.png)
 
+## Modular
+
+![modules](docs/img/exploded.png)
+
+* **Two identical end blocks.** Either one takes the **motor pod** or the **crank pod** (4× M4 each), or no pod for a manual-only slider.
+* **Plug-in electronics box.** It bolts onto the motor pod, and the motor, endstops and shutter connect through **GX12 aviation plugs**.
+* **Carriage top interface:** 3/8" + 1/4" + **4× M4 on 40 × 40 mm** for heads and future modules.
+* **Any rod length**, by changing one setting. All dimensions and interfaces are in [docs/DIMENSIONS.md](docs/DIMENSIONS.md).
+
 ## Features
 
 * **Mount it 3 ways:** on **2 tripods** (1/4"-20 and 3/8"-16 threads under each end), on **1 tripod**, or flat on a **table/floor** (optional wide feet).
 * **Drive it 4 ways:**
   * **Motorized**: NEMA17 + silent TMC2209 driver, smooth eased moves for video
   * **By hand**: motor released, push the carriage
-  * **Hand crank**: wheel on the idler end
+  * **Hand crank**: wheel on the crank pod
   * **Fully free**: quick-release belt clamp
   * Also a rotary-knob "electronic hand wheel" on the control box
 * **Control:**
@@ -33,12 +42,13 @@ It's built from parts you can buy in Egyptian electronics/maker shops, and every
 
 | Folder | What's inside |
 |--------|---------------|
-| [`cad/`](cad) | Parametric **OpenSCAD** source (`config.scad`, `parts.scad`, `assembly.scad`) and ready-to-print **STLs** in `cad/stl/` |
+| [`cad/`](cad) | Parametric **OpenSCAD** source (`config.scad` = all dimensions, `parts.scad`, `assembly.scad`, `exploded.scad`), ready-to-print **STLs** in `cad/stl/`, and `check_fit.sh` (collision + bed-size checks) |
 | [`firmware/`](firmware) | ESP32 firmware (PlatformIO / Arduino IDE) + the web UI (`firmware/ui/index.html`) |
-| [`docs/SHOPPING_LIST.md`](docs/SHOPPING_LIST.md) | **Parts to buy**, with search keywords per shop group (+ [CSV](docs/SHOPPING_LIST.csv) to fill in prices) |
+| [`docs/SHOPPING_LIST.md`](docs/SHOPPING_LIST.md) | **Parts to buy, with links to the Egyptian shops** that list them (+ [CSV](docs/SHOPPING_LIST.csv)) |
+| [`docs/DIMENSIONS.md`](docs/DIMENSIONS.md) | Module interfaces, key heights, travel/belt table, part sizes, bought-part dimensions |
 | [`docs/PRINTING.md`](docs/PRINTING.md) | Ender-3 V3 print settings, orientation, fit tuning |
-| [`docs/WIRING.md`](docs/WIRING.md) | Pin map, power, motor current, endstops, shutter cable |
-| [`docs/ASSEMBLY.md`](docs/ASSEMBLY.md) | Step-by-step build, mounting & hand-drive modes |
+| [`docs/WIRING.md`](docs/WIRING.md) | Wiring diagram, GX12 pinout, perfboard layout, pin map, motor current |
+| [`docs/ASSEMBLY.md`](docs/ASSEMBLY.md) | Step-by-step modular build, roller preload, **lowest-friction checklist**, mounting & drive modes |
 | [`docs/COMMANDS.md`](docs/COMMANDS.md) | Every command (Wi-Fi / Bluetooth / USB) and setting |
 
 ## Key specs
@@ -46,12 +56,13 @@ It's built from parts you can buy in Egyptian electronics/maker shops, and every
 | | |
 |---|---|
 | Rails | 4 × 10 mm chrome rod, arranged as 2 twin-rod tracks 100 mm apart. 800 mm long (≈ 600 mm travel), up to 1000 mm |
-| Bearings | 6 × 608ZZ rollers on M8 axles: 2 on top + 1 preloaded underneath per track. They roll in the groove between the two rods, with zero play and no sliding parts |
+| Bearings | 6 × 608 rollers on M8 axles: 2 on top + 1 **spring-preloaded** underneath per track. They roll in the groove between the two rods, with zero play and no sliding parts. Hybrid ceramic 608s give the lowest friction |
 | Drive | NEMA17, GT2 6 mm belt, 20T pulleys → 80 steps/mm at 1/16 microstep |
 | Speed | up to 120 mm/s (configurable), down to < 0.01 mm/s for long time-lapses |
-| Controller | ESP32-WROOM-32 DevKit V1 + TMC2209 + LM2596 |
+| Controller | ESP32-WROOM-32 DevKit V1 (30-pin) + TMC2209 + LM2596, in a printed box with 3× GX12 sockets |
 | Power | 12 V 2 A adapter or 3S 18650 pack |
-| Camera mount | 3/8" centre hole + two 1/4" holes on the carriage, for a ball head or fluid head |
+| Camera mount | 3/8" centre + 2× 1/4" + 4× M4 (40 × 40) on the carriage |
+| Printer | every part fits an Ender-3 V3 (largest: carriage 156 × 120 × 73 mm), no supports, ≈ 750 g PETG |
 
 ## Quick start
 

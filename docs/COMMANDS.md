@@ -12,7 +12,7 @@ Positions are in **mm from the motor end** (after homing).
 | `ZERO` | "here is 0" (use when endstops are disabled) |
 | `STOP` / `ESTOP` | smooth stop / immediate stop, cancels any job |
 | `GOTO <mm> [mm/s]` | go to a position at max (or given) speed |
-| `JOG <mm>` | relative move (+ = toward idler end) |
+| `JOG <mm>` | relative move (+ = away from the MIN / home end) |
 | `MOVE <mm> <sec> [ease%]` | timed move to a position |
 | `SETA [mm]`, `SETB [mm]` | store A / B (current position if no value) |
 | `GOA`, `GOB` | go to A / B |

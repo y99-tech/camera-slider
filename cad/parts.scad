@@ -433,8 +433,9 @@ module elec_box() {
         // -X wall: DC jack (panel type, 11 mm hole) + KCD1 rocker switch (19.2 x 13.2 cut-out)
         translate([-box_l/2 - 1, -18, 22]) rotate([0, 90, 0]) cylinder(d = 11.2, h = 10);
         translate([-box_l/2 - 1, 12 - 6.6, 22 - 9.6]) cube([10, 13.2, 19.2]);
-        // +X wall: USB access for the ESP32 (board sits on 8.5 mm female headers)
-        translate([box_l/2 - 5, 8 - 7, 15]) cube([10, 14, 12]);
+        // +X wall: USB access for the ESP32 (board sits on 8.5 mm female headers;
+        // ESP32 centre is 5 mm toward +Y of the perfboard centre, see docs/img/perfboard.svg)
+        translate([box_l/2 - 5, 5 - 7, 15]) cube([10, 14, 12]);
         // +Y wall (top when mounted): 3x GX12 aviation sockets
         for (x = gx12_xs) translate([x, box_w/2 - 5, 35]) rotate([-90, 0, 0]) cylinder(d = 12.2, h = 10);
         // -Y wall: vents (TMC2209 heatsink)
