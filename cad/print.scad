@@ -2,8 +2,10 @@
 include <parts.scad>
 part = "carriage_print";
 
-if (part == "motor_end")        motor_end();
-if (part == "idler_end")        idler_end();
+if (part == "end_block")        end_block();
+if (part == "motor_pod")        motor_pod();
+if (part == "crank_pod")        crank_pod();
+if (part == "spring_seat")      spring_seat();
 if (part == "carriage_print")   carriage_print();
 if (part == "belt_clamp_plate") belt_clamp_plate();
 if (part == "thumb_knob")       thumb_knob();

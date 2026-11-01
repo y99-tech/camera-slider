@@ -43,10 +43,15 @@ end_w        = 150;     // width across X
 end_d        = 30;      // depth of the rod-clamp section (Y)
 end_h        = rod_z + 20;
 floor_t      = 6;
-motor_bay_d  = 50;      // outboard section on the motor end
-idler_bay_d  = 40;      // outboard section on the idler end
-pulley_y_motor = -24;   // pulley axis Y position (outboard, negative Y)
-pulley_y_idler = -20;
+motor_bay_d  = 58;      // depth of the motor pod (behind the end block)
+idler_bay_d  = 48;      // depth of the crank pod
+pulley_y_motor = -30;   // pulley axis Y position (outboard, negative Y)
+pulley_y_idler = -26;
+pod_t        = 6;
+crank_pod_w  = 80;      // crank pod width (hand wheel sits just outside it)
+wheel_x      = crank_pod_w/2 + 4;   // inner face of the hand wheel (5 mm shaft ~85 mm long)       // thickness of a pod's mounting flange
+// pod interface: 4x M4x35 through the end block, nuts recessed in its inner face
+pod_holes    = [[-30, 40], [30, 40], [-30, 56], [30, 56]];   // [x, z]
 
 // ---------- Carriage ----------
 car_w        = 144;
@@ -56,7 +61,10 @@ car_z0       = rod_z + roller_dz + roller_od/2 + 2.5;   // bottom of the top pla
 cheek_t      = 6;
 cheek_in     = track_sp/2 - pair_sp/2 - rod_d/2 - 1;    // inner cheek outer face (|x|)
 cheek_out    = track_sp/2 + pair_sp/2 + rod_d/2 + 1;    // outer cheek inner face (|x|)
-cheek_bot    = rod_z - roller_dz - 9;                   // bottom of the cheeks
+// bottom roller is spring loaded: 2 springs (one per cheek) push its axle up
+spring_d     = 9;       // pocket for an Ender-3 bed-levelling spring (8 mm OD, ~20 mm long)
+spring_pocket= 17;      // pocket length below the axle slot
+cheek_bot    = rod_z - roller_dz - 3 - spring_pocket - 4;   // bottom of the cheeks (4 mm under the pockets for the M4 adjuster)
 
 // ---------- Hardware ----------
 m3_hole  = 3.3;   m3_nut  = 6.4;  m3_nut_t = 2.6;

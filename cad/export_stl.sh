@@ -3,7 +3,7 @@
 set -euo pipefail
 cd "$(dirname "$0")"
 mkdir -p stl
-parts=(motor_end idler_end carriage_print belt_clamp_plate thumb_knob hand_wheel
+parts=(end_block motor_pod crank_pod spring_seat carriage_print belt_clamp_plate thumb_knob hand_wheel
        crank_spinner roller_spacer table_foot elec_box elec_lid_print encoder_knob)
 for p in "${parts[@]}"; do
   out="stl/${p%_print}.stl"

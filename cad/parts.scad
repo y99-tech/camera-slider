@@ -5,12 +5,22 @@
 // ============================================================
 include <config.scad>
 
+// ---------- electronics box (used by the motor pod too) ----------
+box_l = 130; box_w = 80; box_h = 50; box_wall = 2.4; box_r = 5;
+pb_x  = box_l/2 - box_wall - 2 - 35;       // perfboard centre X (USB end 2 mm from the wall)
+lm_x  = -box_l/2 + box_wall + 22 + 11;     // LM2596 centre X (behind the jack/switch)
+gx12_xs = [-30, 0, 30];                    // GX12 holes (12.2 mm) in the +Y wall
+box_mount_x = 45; box_mount_y = 30;        // 2x M4 in the floor -> motor pod rear wall
+box_z = 40;                                // box centre height when mounted on the pod
+
+
 // ------------------------------------------------------------
-//  Rod-clamp section shared by both end blocks
+//  END BLOCK (print 2 - both ends are identical)
 //  occupies x = +-end_w/2, y = 0..end_d, z = 0..end_h
-//  rods enter from the inner face (y = end_d)
+//  rods enter from the inner face (y = end_d). A pod (motor or crank)
+//  bolts to the outer face (y = 0) with 4x M4x35; or leave it bare.
 // ------------------------------------------------------------
-module end_rod_section() {
+module end_block() {
     difference() {
         // body with rounded top corners
         hull() {
@@ -57,88 +67,112 @@ module end_rod_section() {
         for (sx = [-1, 1])
             translate([sx * 21 - 6, -eps, floor_t + 12]) cube([12, end_d + 2*eps, 14]);
 
+        // pod interface: M4 through-holes, nuts recessed 5 mm into the inner face
+        for (h = pod_holes) {
+            translate([h[0], -eps, h[1]]) rotate([-90, 0, 0]) cylinder(d = m4_hole, h = end_d + 1);
+            translate([h[0], end_d - 5, h[1]]) rotate([-90, 0, 0]) rotate(30) hex(m4_nut, 6);
+        }
+
         // endstop cable channel along the inner face (top)
         translate([-end_w/2 + 4, end_d - 4, end_h - 3]) cube([end_w - 8, 5, 3 + eps]);
     }
 }
 
 // ------------------------------------------------------------
-//  MOTOR END   (rods at y = 0..end_d, motor bay at y < 0)
+//  POD FLANGE - the part of every pod that bolts to an end block
 // ------------------------------------------------------------
-module motor_end() {
-    pt = 5;                         // motor plate thickness
-    px = -14;                       // motor plate +X face (motor face sits here)
-    union() {
-        end_rod_section();
-        difference() {
-            union() {
-                // floor
-                translate([-end_w/2, -motor_bay_d, 0]) cube([end_w, motor_bay_d + eps, floor_t]);
-                // motor plate
-                translate([px - pt, -motor_bay_d, 0]) cube([pt, motor_bay_d + eps, pulley_z + nema_w/2 + 4]);
-                // opposite bearing-free cheek (stiffness + belt guard)
-                translate([14, -motor_bay_d, 0]) cube([pt, motor_bay_d + eps, pulley_z + 12]);
-                // rear wall (electronics box mounts here)
-                translate([-end_w/2, -motor_bay_d, 0]) cube([end_w, 5, 60]);
-                // gussets
-                for (gx = [-end_w/2, end_w/2 - 5])
-                    translate([gx, -motor_bay_d, 0]) cube([5, motor_bay_d + eps, 30]);
-            }
-            // NEMA17 boss + screw holes (screws inserted from the pulley side)
-            translate([px - pt - eps, pulley_y_motor, pulley_z]) {
-                rotate([0, 90, 0]) cylinder(d = nema_boss, h = pt + 2);
-                for (dy = [-1, 1], dz = [-1, 1])
-                    translate([0, dy * nema_hole_sp/2, dz * nema_hole_sp/2])
-                        rotate([0, 90, 0]) hull() {
-                            // slotted 1 mm so belt tension can be trimmed
-                            cylinder(d = m3_hole, h = pt + 2);
-                            translate([0, 1, 0]) cylinder(d = m3_hole, h = pt + 2);
-                        }
-            }
-            // electronics box screws (M4, 80 mm apart) + cable hole
+module pod_flange(w = end_w) {
+    difference() {
+        hull() {
+            translate([-w/2, -pod_t, 0]) cube([w, pod_t, 1]);
             for (sx = [-1, 1])
-                translate([sx * 40, -motor_bay_d - eps, 40]) rotate([-90, 0, 0]) cylinder(d = m4_hole, h = 10);
-            translate([0, -motor_bay_d - eps, 50]) rotate([-90, 0, 0]) cylinder(d = 12, h = 10);
-            // floor drain / weight holes
-            for (sx = [-1, 1])
-                translate([sx * 45, -motor_bay_d/2, -eps]) cylinder(d = 16, h = floor_t + 2);
+                translate([sx * (w/2 - 8), -pod_t, end_h - 8])
+                    rotate([-90, 0, 0]) cylinder(r = 8, h = pod_t);
         }
+        // belt passage
+        translate([-7, -pod_t - eps, pulley_z - 12]) cube([14, pod_t + 2*eps, 26]);
+        for (h = pod_holes)
+            translate([h[0], -pod_t - eps, h[1]]) rotate([-90, 0, 0]) cylinder(d = m4_hole, h = pod_t + 1);
+        // weight
+        if (w > 120) for (sx = [-1, 1])
+            translate([sx * 52 - 9, -pod_t - eps, floor_t + 4]) cube([18, pod_t + 2*eps, 22]);
     }
 }
 
 // ------------------------------------------------------------
-//  IDLER END  (hand-crank shaft on two 625ZZ bearings)
+//  MOTOR POD  (NEMA17 + drive pulley, carries the electronics box)
 // ------------------------------------------------------------
-module idler_end() {
+module motor_pod() {
+    pt = 5;                         // motor plate thickness
+    px = -14;                       // motor plate +X face (motor face sits here)
+    difference() {
+        union() {
+            pod_flange();
+            // floor
+            translate([-end_w/2, -motor_bay_d, 0]) cube([end_w, motor_bay_d, floor_t]);
+            // motor plate
+            translate([px - pt, -motor_bay_d, 0]) cube([pt, motor_bay_d, pulley_z + nema_w/2 + 4]);
+            // opposite cheek (stiffness + belt guard)
+            translate([14, -motor_bay_d, 0]) cube([pt, motor_bay_d, pulley_z + 12]);
+            // rear wall (electronics box mounts here)
+            translate([-end_w/2, -motor_bay_d, 0]) cube([end_w, 5, box_z + box_mount_y + 8]);
+            // side walls
+            for (gx = [-end_w/2, end_w/2 - 5])
+                translate([gx, -motor_bay_d, 0]) cube([5, motor_bay_d, 30]);
+        }
+        // NEMA17 boss + screw holes (screws inserted from the pulley side)
+        translate([px - pt - eps, pulley_y_motor, pulley_z]) {
+            rotate([0, 90, 0]) cylinder(d = nema_boss, h = pt + 2);
+            for (dy = [-1, 1], dz = [-1, 1])
+                translate([0, dy * nema_hole_sp/2, dz * nema_hole_sp/2])
+                    rotate([0, 90, 0]) hull() {
+                        // slotted 1 mm so belt tension can be trimmed
+                        cylinder(d = m3_hole, h = pt + 2);
+                        translate([0, 1, 0]) cylinder(d = m3_hole, h = pt + 2);
+                    }
+        }
+        // electronics box screws (M4, 90 mm apart)
+        for (sx = [-1, 1])
+            translate([sx * box_mount_x, -motor_bay_d - eps, box_z + box_mount_y]) rotate([-90, 0, 0]) cylinder(d = m4_hole, h = 10);
+        // motor cable exit
+        translate([-40, -motor_bay_d - eps, 15]) rotate([-90, 0, 0]) cylinder(d = 10, h = 10);
+        // floor weight holes
+        for (sx = [-1, 1])
+            translate([sx * 45, -motor_bay_d/2, -eps]) cylinder(d = 16, h = floor_t + 2);
+    }
+}
+
+// ------------------------------------------------------------
+//  CRANK POD  (idler pulley on a 5 mm shaft in two 625ZZ, hand wheel)
+// ------------------------------------------------------------
+module crank_pod() {
     wt = 8;                     // wall thickness (holds a 5 mm wide 625ZZ)
     wx = 12;                    // inner face of each wall
-    union() {
-        end_rod_section();
-        difference() {
-            union() {
-                translate([-end_w/2, -idler_bay_d, 0]) cube([end_w, idler_bay_d + eps, floor_t]);
-                for (sx = [-1, 1])
-                    translate([sx > 0 ? wx : -wx - wt, -idler_bay_d, 0])
-                        hull() {
-                            cube([wt, idler_bay_d + eps, pulley_z]);
-                            translate([0, idler_bay_d + pulley_y_idler, pulley_z])
-                                rotate([0, 90, 0]) cylinder(r = 14, h = wt);
-                            translate([0, idler_bay_d - 1, 0]) cube([wt, 1, pulley_z + 14]);
-                        }
-                translate([-end_w/2, -idler_bay_d, 0]) cube([end_w, 5, 25]);
-                for (gx = [-end_w/2, end_w/2 - 5])
-                    translate([gx, -idler_bay_d, 0]) cube([5, idler_bay_d + eps, 25]);
-            }
-            // shaft + bearing seats (bearings pressed in from the outside)
-            translate([0, pulley_y_idler, pulley_z]) {
-                rotate([0, 90, 0]) cylinder(d = 6, h = 100, center = true);
-                for (sx = [-1, 1])
-                    translate([sx > 0 ? wx + wt - b625_w : -wx - wt - eps, 0, 0])
-                        rotate([0, 90, 0]) cylinder(d = b625_od, h = b625_w + eps);
-            }
+    w  = crank_pod_w;           // narrow, so the hand wheel sits outside it
+    difference() {
+        union() {
+            pod_flange(w);
+            translate([-w/2, -idler_bay_d, 0]) cube([w, idler_bay_d, floor_t]);
             for (sx = [-1, 1])
-                translate([sx * 45, -idler_bay_d/2, -eps]) cylinder(d = 16, h = floor_t + 2);
+                translate([sx > 0 ? wx : -wx - wt, -idler_bay_d, 0])
+                    hull() {
+                        cube([wt, idler_bay_d, pulley_z]);
+                        translate([0, idler_bay_d + pulley_y_idler, pulley_z])
+                            rotate([0, 90, 0]) cylinder(r = 14, h = wt);
+                        translate([0, idler_bay_d - 1, 0]) cube([wt, 1, pulley_z + 14]);
+                    }
+            translate([-w/2, -idler_bay_d, 0]) cube([w, 5, 25]);
+            for (gx = [-w/2, w/2 - 5])
+                translate([gx, -idler_bay_d, 0]) cube([5, idler_bay_d, 25]);
         }
+        // shaft + bearing seats (bearings pressed in from the outside)
+        translate([0, pulley_y_idler, pulley_z]) {
+            rotate([0, 90, 0]) cylinder(d = 6, h = 100, center = true);
+            for (sx = [-1, 1])
+                translate([sx > 0 ? wx + wt - b625_w : -wx - wt - eps, 0, 0])
+                    rotate([0, 90, 0]) cylinder(d = b625_od, h = b625_w + eps);
+        }
+        // flange bolts reachable from the side walls' inner faces
     }
 }
 
@@ -150,6 +184,8 @@ belt_clamp_y = car_l/2 - 10;     // centre of each belt clamp block
 belt_block_bottom = belt_top_z + 0.9;   // belt (1.4 mm) lies just below this face
 top_axle_z = rod_z + roller_dz;
 bot_axle_z = rod_z - roller_dz;
+boss_w     = 8;     // extra cheek thickness around the spring pockets
+spring_xs  = [cheek_in - cheek_t/2 - boss_w/2, cheek_out + cheek_t/2 + boss_w/2];   // |x| of the springs
 
 // one cheek plate, x0..x1, with a thicker boss around the bottom axle
 module cheek(x0, x1, boss_dx) {
@@ -160,7 +196,8 @@ module cheek(x0, x1, boss_dx) {
                 translate([x0, -16, cheek_bot]) cube([x1 - x0, 32, 1]);
                 translate([x0, -40, top_axle_z - 9]) cube([x1 - x0, 80, 1]);
             }
-            translate([min(x0, x0 + boss_dx), -12, cheek_bot]) cube([x1 - x0 + abs(boss_dx), 24, 12]);
+            translate([min(x0, x0 + boss_dx), -12, cheek_bot])
+                cube([x1 - x0 + abs(boss_dx), 24, bot_axle_z + 8 - cheek_bot]);
         }
         // windows between the rollers
         for (sy = [-1, 1])
@@ -180,11 +217,11 @@ module carriage() {
             // roller cheeks: one inside and one outside each rod pair
             for (sx = [-1, 1]) {
                 if (sx > 0) {
-                    cheek(cheek_in - cheek_t, cheek_in, -4);
-                    cheek(cheek_out, cheek_out + cheek_t, 4);
+                    cheek(cheek_in - cheek_t, cheek_in, -boss_w);
+                    cheek(cheek_out, cheek_out + cheek_t, boss_w);
                 } else {
-                    cheek(-cheek_in, -cheek_in + cheek_t, 4);
-                    cheek(-cheek_out - cheek_t, -cheek_out, -4);
+                    cheek(-cheek_in, -cheek_in + cheek_t, boss_w);
+                    cheek(-cheek_out - cheek_t, -cheek_out, -boss_w);
                 }
             }
             // belt clamp blocks
@@ -200,13 +237,15 @@ module carriage() {
             for (sy = [-1, 1])
                 translate([sx * track_sp/2, sy * roller_y, top_axle_z])
                     rotate([0, 90, 0]) cylinder(d = axle_d + 0.4, h = 60, center = true);
-            // bottom roller axle: vertical slot so it can be pushed up (preload)
+            // bottom roller axle: vertical slot, the axle floats on 2 springs (preload)
             translate([sx * track_sp/2, 0, 0]) rotate([0, 90, 0])
-                hull() for (dz = [-2.5, 1]) translate([-(bot_axle_z + dz), 0, 0])
-                    cylinder(d = axle_d + 0.4, h = 60, center = true);
-            // M4 push screws (from below) under the bottom axle, one per cheek
-            for (cx = [cheek_in - cheek_t/2, cheek_out + cheek_t/2])
-                translate([sx * cx, 0, cheek_bot - eps]) cylinder(d = 3.5, h = bot_axle_z - cheek_bot);
+                hull() for (dz = [-3, 1.5]) translate([-(bot_axle_z + dz), 0, 0])
+                    cylinder(d = axle_d + 0.4, h = 70, center = true);
+            // spring pockets under the slot + M4 adjuster screw (from below) per cheek
+            for (cx = spring_xs) {
+                translate([sx * cx, 0, bot_axle_z - 3 - spring_pocket]) cylinder(d = spring_d, h = spring_pocket + 1);
+                translate([sx * cx, 0, cheek_bot - eps]) cylinder(d = 3.5, h = 10);
+            }
         }
         // belt clamp screws: M3 from below, nut dropped in from the top
         for (sy = [-1, 1], sx = [-1, 1]) {
@@ -229,10 +268,16 @@ module carriage() {
         // anti-twist slots for heads with locating pins
         for (sy = [-1, 1]) hull()
             for (dy = [0, 8]) translate([0, sy * (16 + dy), car_z0 - 1]) cylinder(d = 5, h = 20);
+        // MODULE INTERFACE: 4x M4 on a 40 x 40 mm square (nuts trapped underneath)
+        // for future modules (pan head, Arca clamp, phone holder ...)
+        for (sx = [-1, 1], sy = [-1, 1]) {
+            translate([sx * 20, sy * 20, car_z0 - 10]) cylinder(d = m4_hole, h = 30);
+            translate([sx * 20, sy * 20, car_z0 - eps]) rotate(30) hex(m4_nut, m4_nut_t + 0.4);
+        }
         // light-weighting windows
         for (sx = [-1, 1], sy = [-1, 1])
-            translate([sx * 18, sy * 30, car_z0 - eps])
-                cylinder(d = 15, h = car_t + 1);
+            translate([sx * 18, sy * 34, car_z0 - eps])
+                cylinder(d = 13, h = car_t + 1);
     }
 }
 
@@ -248,6 +293,12 @@ module roller_spacer() {
         cylinder(d = 11, h = 0.3);
         translate([0, 0, -eps]) cylinder(d = axle_d + 0.4, h = 1);
     }
+}
+
+// disc between the M4 adjuster screw and the preload spring (4 needed)
+module spring_seat() {
+    cylinder(d = spring_d - 0.8, h = 1.5);
+    translate([0, 0, 1.5]) cylinder(d = 3.8, h = 2.5);   // spigot centres the spring
 }
 
 // carriage printed top-down (plate on the bed)
@@ -346,8 +397,9 @@ module table_foot() {
 //  ELECTRONICS BOX (ESP32 + TMC2209 + buck + switch + DC jack)
 //  bolts to the motor-end rear wall with 2x M4 (80 mm apart)
 // ------------------------------------------------------------
-box_l = 110; box_w = 76; box_h = 42; box_wall = 2.4; box_r = 5;
-
+// Inside: 70 x 50 mm perfboard (ESP32 DevKit + TMC2209) on the +X side,
+// LM2596 module (43 x 21 mm) on the -X side, DC jack + switch in the -X wall,
+// 3x GX12 connectors (motor / endstops / shutter) in the top (+Y) wall.
 module rounded_box(l, w, h, r) {
     hull() for (sx = [-1, 1], sy = [-1, 1])
         translate([sx * (l/2 - r), sy * (w/2 - r), 0]) cylinder(r = r, h = h);
@@ -363,27 +415,30 @@ module elec_box() {
             // lid screw bosses
             for (sx = [-1, 1], sy = [-1, 1])
                 translate([sx * (box_l/2 - 6), sy * (box_w/2 - 6), 0]) cylinder(d = 8, h = box_h);
-            // standoffs for a 70x50 mm perfboard (holes 2.5 mm, 64x44 pattern)
+            // standoffs for the 70x50 mm perfboard (holes 64 x 44 mm)
             for (sx = [-1, 1], sy = [-1, 1])
-                translate([sx * 32 - 8, sy * 22, 0]) cylinder(d = 6, h = box_wall + 5);
+                translate([pb_x + sx * 32, sy * 22, 0]) cylinder(d = 6, h = box_wall + 5);
+            // locating frame for the LM2596 module (stick it down with foam tape)
+            translate([lm_x, 0, 0]) difference() {
+                translate([-12.5, -23, 0]) cube([25, 46, box_wall + 2]);
+                translate([-11, -22, box_wall]) cube([22, 44, 5]);
+            }
         }
         for (sx = [-1, 1], sy = [-1, 1]) {
             translate([sx * (box_l/2 - 6), sy * (box_w/2 - 6), box_wall]) cylinder(d = 2.6, h = box_h);
-            translate([sx * 32 - 8, sy * 22, 1]) cylinder(d = 2.4, h = 20);
+            translate([pb_x + sx * 32, sy * 22, 1]) cylinder(d = 2.4, h = 20);
         }
-        // M4 mounting holes in the floor (to the motor-end rear wall)
-        for (sx = [-1, 1]) translate([sx * 40, 0, -eps]) cylinder(d = m4_hole, h = box_wall + 1);
-        // cable exit to the slider (lines up with the 12 mm hole in the rear wall)
-        translate([0, 10, -eps]) cylinder(d = 11, h = box_wall + 1);
-        // -X wall: DC jack (8 mm) + rocker switch (19x13)
-        translate([-box_l/2 - 1, -18, 20]) rotate([0, 90, 0]) cylinder(d = 8, h = 10);
-        translate([-box_l/2 - 1, 6, 20 - 6.5]) cube([10, 19.5, 13.2]);
-        // +X wall: USB access for the ESP32 (flashing / power)
-        translate([box_l/2 - 5, -6, box_wall + 9]) cube([10, 12, 8]);
-        // +Y wall: 3 cable holes (motor, endstops, shutter)
-        for (dx = [-25, 0, 25]) translate([dx, box_w/2 - 5, 24]) rotate([-90, 0, 0]) cylinder(d = 7, h = 10);
-        // vents
-        for (i = [-3 : 3]) translate([i * 10 - 1.2, -box_w/2 - 1, box_h - 14]) cube([2.4, 10, 9]);
+        // M4 mounting holes in the floor (to the motor pod's rear wall), clear of the boards
+        for (sx = [-1, 1]) translate([sx * box_mount_x, box_mount_y, -eps]) cylinder(d = m4_hole, h = box_wall + 1);
+        // -X wall: DC jack (panel type, 11 mm hole) + KCD1 rocker switch (19.2 x 13.2 cut-out)
+        translate([-box_l/2 - 1, -18, 22]) rotate([0, 90, 0]) cylinder(d = 11.2, h = 10);
+        translate([-box_l/2 - 1, 12 - 6.6, 22 - 9.6]) cube([10, 13.2, 19.2]);
+        // +X wall: USB access for the ESP32 (board sits on 8.5 mm female headers)
+        translate([box_l/2 - 5, 8 - 7, 15]) cube([10, 14, 12]);
+        // +Y wall (top when mounted): 3x GX12 aviation sockets
+        for (x = gx12_xs) translate([x, box_w/2 - 5, 35]) rotate([-90, 0, 0]) cylinder(d = 12.2, h = 10);
+        // -Y wall: vents (TMC2209 heatsink)
+        for (i = [-4 : 4]) translate([i * 10 - 1.2, -box_w/2 - 1, 15]) cube([2.4, 10, 25]);
     }
 }
 
@@ -405,15 +460,16 @@ module elec_lid() {
                 cylinder(d = 3.4, h = 10);
                 cylinder(d = 6.2, h = 1.4);
             }
-        // rotary encoder (7 mm thread) + anti-rotation tab
-        translate([25, 0, -eps]) cylinder(d = 7.4, h = 10);
-        translate([25 + 7.8, -1.3, -eps]) cube([1.6, 2.6, 10]);
-        // two push buttons (12 mm tactile caps / 12 mm panel buttons)
-        for (dx = [-10, -32]) translate([dx, 0, -eps]) cylinder(d = 12.4, h = 10);
+        // The lid is modelled outside-face-down and flipped about X onto the
+        // box, so lid (x, y) sits over box (x, -y).
+        // rotary encoder KY-040 (7 mm thread) above the LM2596 (box -38, 0)
+        translate([-38, 0, -eps]) cylinder(d = 7.4, h = 10);
+        // two 12 mm push buttons above the TMC2209 side of the perfboard (box y = -18)
+        for (x = [5, 30]) translate([x, 18, -eps]) cylinder(d = 12.4, h = 10);
         // status LED (5 mm)
-        translate([45, 22, -eps]) cylinder(d = 5.2, h = 10);
+        translate([52, -25, -eps]) cylinder(d = 5.2, h = 10);
         // label recess
-        translate([-50, -30, -eps]) cube([40, 8, 0.6]);
+        translate([-20, -28, -eps]) cube([40, 8, 0.6]);
     }
 }
 
@@ -438,3 +494,4 @@ module encoder_knob() {
         }
     }
 }
+

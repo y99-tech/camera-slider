@@ -4,12 +4,15 @@ module roller() rotate([0, 90, 0]) difference() { cylinder(d = roller_od, h = ro
 car_pos = 0;   // carriage position along the rail (mm, 0 = centre)
 
 ins = end_d - rod_insert;          // rod end inside the block
-span = rail_len - 2 * ins;         // distance between the two block origins
+span = rail_len + 2 * ins;         // distance between the two block origins (rod ends sit ins mm inside each block)
 y_m = -span/2;                     // motor end origin
 y_i =  span/2;                     // idler end origin (mirrored)
 
-color("SteelBlue") translate([0, y_m, 0]) motor_end();
-color("SteelBlue") translate([0, y_i, 0]) mirror([0, 1, 0]) idler_end();
+// both end blocks are the same part; the far one is turned 180 deg
+color("SteelBlue") translate([0, y_m, 0]) end_block();
+color("SteelBlue") translate([0, y_i, 0]) rotate([0, 0, 180]) end_block();
+color("CadetBlue") translate([0, y_m, 0]) motor_pod();
+color("CadetBlue") translate([0, y_i, 0]) rotate([0, 0, 180]) crank_pod();
 // rods
 color("Silver") for (x = rod_xs)
     translate([x, -rail_len/2, rod_z]) rotate([-90, 0, 0]) cylinder(d = rod_d, h = rail_len);
@@ -42,6 +45,6 @@ color("#111") {
     translate([-3, pm, pulley_z - pulley_pd/2 - 0.7]) cube([6, pi - pm, 1.4]);
 }
 // hand wheel
-color("Tomato") translate([22, y_i - pulley_y_idler, pulley_z]) rotate([0, 90, 0]) hand_wheel();
+color("Tomato") translate([wheel_x, y_i - pulley_y_idler, pulley_z]) rotate([0, 90, 0]) hand_wheel();
 // electronics box on the motor-end rear wall
-color("SlateGray") translate([0, y_m - motor_bay_d, 40]) rotate([90, 0, 0]) elec_box();
+color("SlateGray") translate([0, y_m - motor_bay_d, box_z]) rotate([90, 0, 0]) elec_box();
